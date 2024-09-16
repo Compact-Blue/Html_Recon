@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HTML-RECON</title>
+  <style>
+    /* Reset default browser styles */
+    * {
+      font-family: 'Courier New', Courier, monospace;
+      background-color: #1e1e1e;
+      color: #c5c6c7;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      padding: 20px;
+    }
+
+    h1, h2 {
+      color: #00ff00;
+    }
+
+    input, button {
+      font-size: 1rem;
+      padding: 10px;
+      margin: 5px 0;
+      border: 1px solid #00ff00;
+      background-color: #2d2d2d;
+      color: #c5c6c7;
+      border-radius: 5px;
+    }
+
+    input:focus, button:focus {
+      outline: none;
+      border-color: #00cc00;
+    }
+
+    button {
+      cursor: pointer;
+      background-color: #007700;
+    }
+
+    button:hover {
+      background-color: #005500;
+    }
+
+    .results {
+      background-color: #333;
+      padding: 10px;
+      border-radius: 5px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    a {
+      color: #00ff00;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    hr {
+      border: 0;
+      border-top: 1px solid #444;
+    }
+
+          textarea {
+            width: 100%;
+            height: 70px;
+            background-color: #333;
+            color: #c5c6c7;
+            border: none;
+            padding: 10px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 14px;
+            resize: vertical;
+            margin: 5px 0;
+    }        
+  </style>
+</head>
+
+<body>
+  <h1>Html Recon</h1><br>
+
+  <!-- Input for domain -->
+  <label for="domain">Domain:</label><br>
+  <input class="domain" id="domain" oninput="updateSearchQuery()" size="50" value="hacker.com"><br><br>
+  
+  <!-- Input for timestamp (Wayback Machine) -->
+  <label for="timestamp">Timestamp (Wayback Machine):</label><br>
+  <input class="timestamp" id="timestamp" oninput="updateSearchQuery()" size="50" value="20050205062658"><br><br>
+  <br><hr><br>
+
+  <!-- Google Dorking Results -->
+  <h2>Google Dorking</h2><br>
+  <div class="results" id="dorking-results">
+  </div>
+  <br><br><hr><br>
+
+  <!-- Wayback Machine Results -->
+  <h2>Wayback Machine Links</h2><br>
+  <div class="results" id="wayback-results"></div>
+  <br><br><hr><br>
+
+    <!-- JavaScript Code Section -->
+  <h2>copy and paste on the console :)</h2><br>
+    <div class="copy-text">
+        <textarea id="code-text">
+javascript:(function(){var scripts=document.getElementsByTagName("script"),regex=/(?<=(\"|\'|\`))\/[a-zA-Z0-9_?&=\/\-\#\.]*(?=(\"|\'|\`))/g;const results=new Set;for(var i=0;i<scripts.length;i++){var t=scripts[i].src;""!=t&&fetch(t).then(function(t){return t.text()}).then(function(t){var e=t.matchAll(regex);for(let r of e)results.add(r[0])}).catch(function(t){console.log("An error occurred: ",t)})}var pageContent=document.documentElement.outerHTML,matches=pageContent.matchAll(regex);for(const match of matches)results.add(match[0]);function writeResults(){results.forEach(function(t){document.write(t+"<br>")})}setTimeout(writeResults,3e3);})();
+        </textarea> 
+        <br> 
+        <button class="btn" onclick="copyToClipboard()">Copy Code</button>
+    </div>
+    <br><br>
+
+  <script>
+    function copyToClipboard() {
+      var textArea = document.getElementById('code-text');
+        textArea.select();
+        document.execCommand('copy');
+        alert('Code copied to clipboard!');
+      } 
+
+    function updateSearchQuery() {
+      var domain = document.getElementById('domain').value.trim();
+      var timestamp = document.getElementById('timestamp').value.trim();
+
+      // Google Dorking Links
+      var googleDorks = [
+        'site:' + domain + ' inurl:&',
+        'site:' + domain + ' ext:php | ext:aspx | ext:asp | ext:jsp | ext:html | ext:htm',
+        'site:' + domain + ' ext:log | ext:txt | ext:conf | ext:cnf | ext:ini | ext:env | ext:sh | ext:bak | ext:backup | ext:swp | ext:old | ext:~ | ext:git | ext:svn | ext:htpasswd | ext:htaccess | ext:xml',
+        'site:' + domain + ' inurl:url= | inurl:return= | inurl:next= | inurl:redir= inurl:http',
+        'site:' + domain + ' inurl:http | inurl:url= | inurl:path= | inurl:dest= | inurl:html= | inurl:data= | inurl:domain= | inurl:page= inurl:&',
+        'site:' + domain + ' inurl:config | inurl:env | inurl:setting | inurl:backup | inurl:admin | inurl:php',
+        'site:' + domain + ' inurl:email= | inurl:phone= | inurl:password= | inurl:secret= inurl:&',
+        'site:' + domain + ' inurl:apidocs | inurl:api-docs | inurl:swagger | inurl:api-explorer',
+        'site:' + domain + ' inurl:cmd | inurl:exec= | inurl:query= | inurl:code= | inurl:do= | inurl:run= | inurl:read= | inurl:ping= inurl:&',
+        'site:' + domain + ' inurl:(unsubscribe|register|feedback|signup|join|contact|profile|user|comment|api|developer|affiliate|upload|mobile|upgrade|password)',
+        'site:' + domain + ' intitle:"Welcome to Nginx"'
+      ];
+
+      var dorkingResultsDiv = document.getElementById('dorking-results');
+      dorkingResultsDiv.innerHTML = '';
+
+      googleDorks.forEach(function (dork) {
+        var link = 'https://www.google.com/search?q=' + encodeURIComponent(dork);
+        var linkElement = document.createElement('a');
+        linkElement.href = link;
+        linkElement.target = '_blank';
+        linkElement.textContent = dork;
+        dorkingResultsDiv.appendChild(linkElement);
+        dorkingResultsDiv.appendChild(document.createElement('br'));
+      });
+
+      // Wayback Machine Links
+      var waybackDorks = [
+        'https://web.archive.org/cdx/search/cdx?url=https://' + domain,
+        'https://web.archive.org/cdx/search/cdx?url=*.' + domain + '/*&fl=original&collapse=urlkey',
+        'https://web.archive.org/cdx/search/cdx?url=*.' + domain + '/*&fl=timestamp,original&collapse=digest',
+        'https://web.archive.org/web/' + timestamp + '/_/' + domain
+      ];
+
+      var waybackResultsDiv = document.getElementById('wayback-results');
+      waybackResultsDiv.innerHTML = '';
+
+      waybackDorks.forEach(function (dork) {
+        var linkElement = document.createElement('a');
+        linkElement.href = dork;
+        linkElement.target = '_blank';
+        linkElement.textContent = dork;
+        waybackResultsDiv.appendChild(linkElement);
+        waybackResultsDiv.appendChild(document.createElement('br'));
+      });
+    }
+
+    updateSearchQuery();
+  </script>
+
+</body>
+
+</html>
